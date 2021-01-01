@@ -18,3 +18,7 @@ jobs:
           java-version: "${{ matrix.java }}"
     - name: "Clean Build"
       run: "./gradlew clean build"
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.2.1
+      with:
+        path: 'Bukkit/build/libs/*.jar'
