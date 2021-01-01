@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ public class EntityCategories {
     public static final EntityCategory PLAYER = register("player");
 
     public static EntityCategory register(final String id) {
-        final EntityCategory entityCategory = new EntityCategory(PlotSquared.platform().getWorldUtil(), id);
+        final EntityCategory entityCategory = new EntityCategory(PlotSquared.platform().worldUtil(), id);
         EntityCategory.REGISTRY.register(entityCategory.getId(), entityCategory);
         return entityCategory;
     }

@@ -44,7 +44,7 @@ dependencies {
 
     // Minecraft
     compileOnlyApi("com.destroystokyo.paper:paper-api:1.16.4-R0.1-SNAPSHOT")
-    implementation("io.papermc:paperlib:1.0.5")
+    implementation("io.papermc:paperlib:1.0.6")
 
     // Plugins
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.2.0") {
@@ -54,14 +54,19 @@ dependencies {
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
         exclude(group = "org.bukkit")
     }
-    compileOnly("me.clip:placeholderapi:2.10.6")
-    compileOnly("net.luckperms:api:5.1")
-    compileOnly("net.ess3:EssentialsX:2.18.0")
+    compileOnly("me.clip:placeholderapi:2.10.9")
+    compileOnly("net.luckperms:api:5.2")
+    compileOnly("net.ess3:EssentialsX:2.18.2")
     compileOnly("se.hyperver.hyperverse:Core:0.6.0-SNAPSHOT") { isTransitive = false }
     compileOnly("be.maximvdw:MVdWPlaceholderAPI:3.1.1") { isTransitive = false }
 
     // Other libraries
     implementation("com.sk89q:squirrelid:1.0.0-SNAPSHOT") { isTransitive = false }
+
+    // Our libraries
+    implementation("com.intellectualsites.arkitektonika:Arkitektonika-Client:2.0-SNAPSHOT")
+    implementation("com.intellectualsites.http:HTTP4J:1.1-SNAPSHOT")
+    implementation("com.intellectualsites.paster:Paster:1.0.2-SNAPSHOT")
 
     // Adventure
     implementation("net.kyori:adventure-platform-bukkit:4.0.0-SNAPSHOT")
@@ -91,6 +96,9 @@ tasks.named<ShadowJar>("shadowJar") {
     relocate("javax.inject", "com.plotsquared.core.inject.javax")
     relocate("org.aopalliance", "com.plotsquared.core.aopalliance")
     relocate("com.intellectualsites.services", "com.plotsquared.core.services")
+    relocate("com.intellectualsites.arkitektonika", "com.plotsquared.core.arkitektonika")
+    relocate("com.intellectualsites.http", "com.plotsquared.core.http")
+    relocate("com.intellectualsites.paster", "com.plotsquared.core.paster")
 
     // Get rid of all the libs which are 100% unused.
     minimize()

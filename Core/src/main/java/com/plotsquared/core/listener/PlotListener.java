@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -26,14 +26,16 @@
 package com.plotsquared.core.listener;
 
 import com.plotsquared.core.PlotSquared;
-import com.plotsquared.core.permissions.Permission;
 import com.plotsquared.core.configuration.Settings;
+import com.plotsquared.core.configuration.caption.LocaleHolder;
 import com.plotsquared.core.configuration.caption.StaticCaption;
 import com.plotsquared.core.configuration.caption.Templates;
 import com.plotsquared.core.configuration.caption.TranslatableCaption;
+import com.plotsquared.core.database.DBFunc;
 import com.plotsquared.core.events.PlotFlagRemoveEvent;
 import com.plotsquared.core.events.Result;
 import com.plotsquared.core.location.Location;
+import com.plotsquared.core.permissions.Permission;
 import com.plotsquared.core.player.ConsolePlayer;
 import com.plotsquared.core.player.MetaDataAccess;
 import com.plotsquared.core.player.PlayerMetaDataKeys;
@@ -68,16 +70,22 @@ import com.sk89q.worldedit.world.gamemode.GameMode;
 import com.sk89q.worldedit.world.gamemode.GameModes;
 import com.sk89q.worldedit.world.item.ItemType;
 import com.sk89q.worldedit.world.item.ItemTypes;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.Template;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class PlotListener {
+
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.builder().build();
 
     private final HashMap<UUID, Interval> feedRunnable = new HashMap<>();
     private final HashMap<UUID, Interval> healRunnable = new HashMap<>();
@@ -98,14 +106,14 @@ public class PlotListener {
                     ++value.count;
                     if (value.count == value.interval) {
                         value.count = 0;
-                        final PlotPlayer<?> player = PlotSquared.platform().getPlayerManager().getPlayerIfExists(entry.getKey());
+                        final PlotPlayer<?> player = PlotSquared.platform().playerManager().getPlayerIfExists(entry.getKey());
                         if (player == null) {
                             iterator.remove();
                             continue;
                         }
-                        double level = PlotSquared.platform().getWorldUtil().getHealth(player);
+                        double level = PlotSquared.platform().worldUtil().getHealth(player);
                         if (level != value.max) {
-                            PlotSquared.platform().getWorldUtil().setHealth(player, Math.min(level + value.amount, value.max));
+                            PlotSquared.platform().worldUtil().setHealth(player, Math.min(level + value.amount, value.max));
                         }
                     }
                 }
@@ -118,14 +126,14 @@ public class PlotListener {
                     ++value.count;
                     if (value.count == value.interval) {
                         value.count = 0;
-                        final PlotPlayer<?> player = PlotSquared.platform().getPlayerManager().getPlayerIfExists(entry.getKey());
+                        final PlotPlayer<?> player = PlotSquared.platform().playerManager().getPlayerIfExists(entry.getKey());
                         if (player == null) {
                             iterator.remove();
                             continue;
                         }
-                        int level = PlotSquared.platform().getWorldUtil().getFoodLevel(player);
+                        int level = PlotSquared.platform().worldUtil().getFoodLevel(player);
                         if (level != value.max) {
-                            PlotSquared.platform().getWorldUtil().setFoodLevel(player, Math.min(level + value.amount, value.max));
+                            PlotSquared.platform().worldUtil().setFoodLevel(player, Math.min(level + value.amount, value.max));
                         }
                     }
                 }
@@ -167,7 +175,7 @@ public class PlotListener {
             if (plot.getFlag(NotifyEnterFlag.class)) {
                 if (!Permissions.hasPermission(player, "plots.flag.notify-enter.bypass")) {
                     for (UUID uuid : plot.getOwners()) {
-                        final PlotPlayer owner = PlotSquared.platform().getPlayerManager().getPlayerIfExists(uuid);
+                        final PlotPlayer owner = PlotSquared.platform().playerManager().getPlayerIfExists(uuid);
                         if (owner != null && !owner.getUUID().equals(player.getUUID()) && owner.canSee(player)) {
                             player.sendMessage(
                                     TranslatableCaption.of("notification.notify_enter"),
@@ -275,34 +283,45 @@ public class PlotListener {
                 if (!TranslatableCaption.of("titles.title_entered_plot").getComponent(ConsolePlayer.getConsole()).isEmpty()
                     || !TranslatableCaption.of("titles.title_entered_plot_sub").getComponent(ConsolePlayer.getConsole()).isEmpty()) {
                     TaskManager.runTaskLaterAsync(() -> {
-                        Plot lastPlot = null;
+                        Plot lastPlot;
                         try (final MetaDataAccess<Plot> lastPlotAccess =
                             player.accessTemporaryMetaData(PlayerMetaDataKeys.TEMPORARY_LAST_PLOT)) {
                             lastPlot = lastPlotAccess.get().orElse(null);
                         }
-                        if ((lastPlot != null) && plot.getId().equals(lastPlot.getId())) {
-                            player.sendTitle(
-                                TranslatableCaption.of("titles.title_entered_plot"),
-                                TranslatableCaption.of("titles.title_entered_plot_sub"),
-                                Templates.of("x", lastPlot.getId().getX()),
-                                Templates.of("z", lastPlot.getId().getY()),
-                                Templates.of("world", plot.getArea()),
-                                Templates.of("greeting", greeting),
-                                Templates.of("alias", plot.getAlias()),
-                                Templates.of("owner", plot.getOwner())
-                            );
+                        if ((lastPlot != null) && plot.getId().equals(lastPlot.getId()) && plot.hasOwner()) {
+                            final Consumer<String> userConsumer = user -> player
+                                .sendTitle(TranslatableCaption.of("titles.title_entered_plot"),
+                                    TranslatableCaption.of("titles.title_entered_plot_sub"),
+                                    Templates.of("x", lastPlot.getId().getX()), Templates.of("z", lastPlot.getId().getY()),
+                                    Templates.of("world", Objects.requireNonNull(plot.getWorldName(), "Unknown")),
+                                    Templates.of("greeting", greeting), Templates.of("alias", plot.getAlias()),
+                                    Templates.of("owner", user));
+                            UUID uuid = plot.getOwner();
+                            if (uuid == null) {
+                                userConsumer.accept("Unknown");
+                            } else if (uuid.equals(DBFunc.SERVER)) {
+                                userConsumer.accept(MINI_MESSAGE.stripTokens(TranslatableCaption.of("info.server").getComponent(player)));
+                            } else {
+                                PlotSquared.get().getImpromptuUUIDPipeline().getSingle(plot.getOwner(), (user, throwable) -> {
+                                    if (throwable != null) {
+                                        userConsumer.accept("Unknown");
+                                    } else {
+                                        userConsumer.accept(user);
+                                    }
+                                });
+                            }
                         }
                     }, TaskTime.seconds(1L));
                 }
             }
 
             TimedFlag.Timed<Integer> feed = plot.getFlag(FeedFlag.class);
-            if (feed != null && feed.getInterval() != 0 && feed.getValue() != 0) {
+            if (feed.getInterval() != 0 && feed.getValue() != 0) {
                 feedRunnable
                     .put(player.getUUID(), new Interval(feed.getInterval(), feed.getValue(), 20));
             }
             TimedFlag.Timed<Integer> heal = plot.getFlag(HealFlag.class);
-            if (heal != null && heal.getInterval() != 0 && heal.getValue() != 0) {
+            if (heal.getInterval() != 0 && heal.getValue() != 0) {
                 healRunnable
                     .put(player.getUUID(), new Interval(heal.getInterval(), heal.getValue(), 20));
             }
@@ -354,7 +373,7 @@ public class PlotListener {
                 if (plot.getFlag(NotifyLeaveFlag.class)) {
                     if (!Permissions.hasPermission(player, "plots.flag.notify-enter.bypass")) {
                         for (UUID uuid : plot.getOwners()) {
-                            final PlotPlayer owner = PlotSquared.platform().getPlayerManager().getPlayerIfExists(uuid);
+                            final PlotPlayer owner = PlotSquared.platform().playerManager().getPlayerIfExists(uuid);
                             if ((owner != null) && !owner.getUUID().equals(player.getUUID()) && owner.canSee(player)) {
                                 player.sendMessage(
                                     TranslatableCaption.of("notification.notify_leave"),

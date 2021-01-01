@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -203,7 +203,12 @@ public class EntityEventListener implements Listener {
         Plot plot = area.getOwnedPlotAbs(location);
         if (plot == null || plot.getFlag(DisablePhysicsFlag.class)) {
             event.setCancelled(true);
-            plot.debug("Falling block event was cancelled because disable-physics = true");
+            if (plot != null) {
+                if (block.getType().hasGravity()) {
+                    BlockEventListener.sendBlockChange(block.getLocation(), block.getBlockData());
+                }
+                plot.debug("Falling block event was cancelled because disable-physics = true");
+            }
             return;
         }
         if (event.getTo().hasGravity()) {

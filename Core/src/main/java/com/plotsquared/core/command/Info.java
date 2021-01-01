@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ public class Info extends SubCommand {
                 case "id":
                 case "size":
                 case "members":
+                case "creationdate":
                 case "seen":
                 case "owner":
                 case "rating":
@@ -175,6 +176,8 @@ public class Info extends SubCommand {
                 return TranslatableCaption.of("info.plot_info_likes");
             case "seen":
                 return TranslatableCaption.of("info.plot_info_seen");
+            case "creationdate":
+                return TranslatableCaption.of("info.plot_info_creationdate");
             default:
                 return null;
         }

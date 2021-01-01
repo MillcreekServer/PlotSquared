@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ public class DebugImportWorlds extends Command {
         }
         SinglePlotArea area = ((SinglePlotAreaManager) this.plotAreaManager).getArea();
         PlotId id = PlotId.of(0, 0);
-        File container = PlotSquared.platform().getWorldContainer();
+        File container = PlotSquared.platform().worldContainer();
         if (container.equals(new File("."))) {
             player.sendMessage(TranslatableCaption.of("debugimportworlds.world_container"));
             return CompletableFuture.completedFuture(false);

@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ import java.util.List;
     }
 
     protected void setGenerator(@Nullable final String worldName, @Nullable final String generator) {
-        if (generator == null) {
+        if (generator == null || worldName != null && worldName.contains(".")) {
             return;
         }
         File file = new File("bukkit.yml").getAbsoluteFile();

@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ public class SinglePlotArea extends GridPlotWorld {
 
     public void loadWorld(final PlotId id) {
         String worldName = id.getX() + "." + id.getY();
-        if (PlotSquared.platform().getWorldUtil().isWorld(worldName)) {
+        if (PlotSquared.platform().worldUtil().isWorld(worldName)) {
             return;
         }
         PlotAreaBuilder builder = PlotAreaBuilder.newBuilder()
@@ -99,7 +99,7 @@ public class SinglePlotArea extends GridPlotWorld {
                 .settingsNodesWrapper(new SettingsNodesWrapper(new ConfigurationNode[0], null))
                 .worldName(worldName);
 
-        File container = PlotSquared.platform().getWorldContainer();
+        File container = PlotSquared.platform().worldContainer();
         File destination = new File(container, worldName);
 
         {// convert old
@@ -141,8 +141,8 @@ public class SinglePlotArea extends GridPlotWorld {
         try {
             TaskManager.getPlatformImplementation().sync(() -> {
                 final String name = id.getX() + "." + id.getY();
-                if (!PlotSquared.platform().getWorldUtil().isWorld(name)) {
-                    PlotSquared.platform().getSetupUtils().setupWorld(builder);
+                if (!PlotSquared.platform().worldUtil().isWorld(name)) {
+                    PlotSquared.platform().setupUtils().setupWorld(builder);
                 }
                 return null;
             });

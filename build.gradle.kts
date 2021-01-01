@@ -41,7 +41,7 @@ allprojects {
         }
 
         maven {
-            name = "IntellectualSites Repository"
+            name = "IntellectualSites Snapshots Repository"
             url = uri("https://mvn.intellectualsites.com/content/repositories/snapshots")
         }
 
@@ -117,12 +117,20 @@ allprojects {
 
                     developers {
                         developer {
-                            id.set("Saulitired")
+                            id.set("Sauilitired")
                             name.set("Alexander Söderberg")
                         }
                         developer {
                             id.set("N0tMyFaultOG")
                             name.set("NotMyFault")
+                        }
+                        developer {
+                            id.set("SirYwell")
+                            name.set("Hannes Greule")
+                        }
+                        developer {
+                            id.set("dordsor21")
+                            name.set("dordsor21")
                         }
                     }
 
@@ -191,6 +199,10 @@ allprojects {
                 "implNote:a:Implementation Note:"
             )
             opt.destinationDirectory = javadocDir
+        }
+
+        jar {
+            this.archiveClassifier.set("jar")
         }
 
         shadowJar {

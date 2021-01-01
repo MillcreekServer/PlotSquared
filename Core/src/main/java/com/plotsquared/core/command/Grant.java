@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ public class Grant extends Command {
                         );
                     } else {
                         final UUIDMapping uuid = uuids.toArray(new UUIDMapping[0])[0];
-                        PlotPlayer<?> pp = PlotSquared.platform().getPlayerManager().getPlayerIfExists(uuid.getUuid());
+                        PlotPlayer<?> pp = PlotSquared.platform().playerManager().getPlayerIfExists(uuid.getUuid());
                         if (pp != null) {
                             try (final MetaDataAccess<Integer> access = pp.accessPersistentMetaData(
                                 PlayerMetaDataKeys.PERSISTENT_GRANTED_PLOTS)) {

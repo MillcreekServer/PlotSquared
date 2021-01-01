@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 package com.plotsquared.core.command;
 
 import com.google.inject.Inject;
+import com.plotsquared.core.events.TeleportCause;
 import com.plotsquared.core.permissions.Permission;
 import com.plotsquared.core.configuration.Settings;
 import com.plotsquared.core.configuration.caption.TranslatableCaption;
@@ -98,6 +99,10 @@ public class Delete extends SubCommand {
                 return;
             }
             final long start = System.currentTimeMillis();
+            if (Settings.Teleport.ON_DELETE) {
+                plot.teleportPlayer(player, TeleportCause.COMMAND, result -> {
+                });
+            }
             boolean result = plot.getPlotModificationManager().deletePlot(player, () -> {
                 plot.removeRunning();
                 if (this.econHandler.isEnabled(plotArea)) {

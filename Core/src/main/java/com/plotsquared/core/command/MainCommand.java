@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -72,11 +72,14 @@ public class MainCommand extends Command {
         if (instance == null) {
             instance = new MainCommand();
 
-            final Injector injector = PlotSquared.platform().getInjector();
+            final Injector injector = PlotSquared.platform().injector();
             final List<Class<? extends Command>> commands = new LinkedList<>();
             commands.add(Caps.class);
             commands.add(Buy.class);
-            commands.add(Save.class);
+            if (Settings.Web.LEGACY_WEBINTERFACE) {
+                logger.warn("Legacy webinterface is used. Please note that it will be removed in future.");
+                commands.add(Save.class);
+            }
             commands.add(Load.class);
             commands.add(Confirm.class);
             commands.add(Template.class);
@@ -108,7 +111,6 @@ public class MainCommand extends Command {
             commands.add(PluginCmd.class);
             commands.add(Purge.class);
             commands.add(Reload.class);
-            commands.add(Relight.class);
             commands.add(Merge.class);
             commands.add(DebugPaste.class);
             commands.add(Unlink.class);
@@ -164,7 +166,7 @@ public class MainCommand extends Command {
     }
 
     public static boolean onCommand(final PlotPlayer<?> player, String... args) {
-        final EconHandler econHandler = PlotSquared.platform().getEconHandler();
+        final EconHandler econHandler = PlotSquared.platform().econHandler();
         if (args.length >= 1 && args[0].contains(":")) {
             String[] split2 = args[0].split(":");
             if (split2.length == 2) {
@@ -275,14 +277,14 @@ public class MainCommand extends Command {
                 if ("f".equals(args[0].substring(1))) {
                     confirm = new RunnableVal3<Command, Runnable, Runnable>() {
                         @Override public void run(Command cmd, Runnable success, Runnable failure) {
-                            if (PlotSquared.platform().getEconHandler() != null) {
+                            if (PlotSquared.platform().econHandler() != null) {
                                 PlotArea area = player.getApplicablePlotArea();
                                 if (area != null) {
                                     Expression<Double> priceEval =
                                         area.getPrices().get(cmd.getFullId());
                                     Double price = priceEval != null ? priceEval.evaluate(0d) : 0d;
                                     if (price != 0d
-                                        && PlotSquared.platform().getEconHandler().getMoney(player) < price) {
+                                        && PlotSquared.platform().econHandler().getMoney(player) < price) {
                                         if (failure != null) {
                                             failure.run();
                                         }

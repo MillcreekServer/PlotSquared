@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -49,6 +49,9 @@ public class Settings extends Config {
         "For a single plot set `/plot flag set titles false` to disable it.", "For just you run `/plot toggle titles` to disable it.",
         "For all plots: Add `titles: false` in the worlds.yml flags block to disable it."}) public static boolean
         TITLES = true;
+    @Comment("Plot titles fading in (duration in ticks)") public static int TITLES_FADE_IN = 10;
+    @Comment("Plot titles being shown (duration in ticks)") public static int TITLES_STAY = 50;
+    @Comment("Plot titles fading out (duration in ticks)") public static int TITLES_FADE_OUT = 20;
 
     @Create // This value will be generated automatically
     public static ConfigBlock<Auto_Clear> AUTO_CLEAR = null;
@@ -159,6 +162,8 @@ public class Settings extends Config {
         Teleport.DELAY = config.getInt("teleport.delay", Teleport.DELAY);
         Teleport.ON_LOGIN = config.getBoolean("teleport.on_login", Teleport.ON_LOGIN);
         Teleport.ON_DEATH = config.getBoolean("teleport.on_death", Teleport.ON_DEATH);
+        Teleport.ON_CLEAR = config.getBoolean("teleport.on_clear", Teleport.ON_CLEAR);
+        Teleport.ON_DELETE = config.getBoolean("teleport.on_delete", Teleport.ON_DELETE);
 
         // WorldEdit
         //WE_ALLOW_HELPER = config.getBoolean("worldedit.enable-for-helpers");
@@ -409,12 +414,41 @@ public class Settings extends Config {
     }
 
 
+    @Deprecated
     @Comment("Schematic interface related settings")
     public static class Web {
         @Comment({"The web interface for schematics", " - All schematics are anonymous and private",
             " - Downloads can be deleted by the user",
             " - Supports plot uploads, downloads and saves",}) public static String URL =
             "https://schem.intellectualsites.com/plots/";
+        @Comment({"Whether or not the legacy web interface will be used for /plot download and /plot save",
+                 "Note that this will be removed in future versions. Updating to Arkitektonika is highly suggested"})
+        public static boolean LEGACY_WEBINTERFACE = false;
+    }
+
+    @Comment("Schematic web interface related settings")
+    public static class Arkitektonika {
+
+        @Comment("The url of the backend server (Arkitektonika)")
+        public static String BACKEND_URL = "https://ark.jacobandersen.dev/";
+
+        @Comment({"The url used to generate a download link from.",
+                        "{key} will be replaced with the generated key"})
+        public static String DOWNLOAD_URL = "https://sw.jacobandersen.dev/download/{key}";
+
+        @Comment({"The url used to generate a deletion link from.",
+                         "{key} will be replaced with the generated key"})
+        public static String DELETE_URL = "https://sw.jacobandersen.dev/delete/{key}";
+    }
+
+    @Comment("Used to format the plot creation date placeholder. Modifying the format does not affect the storage time.")
+    public static class Timeformat {
+
+        @Comment("The date used formatted in ISO 8601")
+        public static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss z";
+
+        @Comment("The time zone used")
+        public static String TIME_ZONE = "GMT";
     }
 
 
@@ -441,8 +475,8 @@ public class Settings extends Config {
     public static final class Limit {
         @Comment("Should the limit be global (over multiple worlds)") public static boolean GLOBAL =
             false;
-        @Comment({"The max. range of permissions to check e.g. plots.plot.127",
-            "The value covers the range to check only, you need to assign the permission to players/groups still",
+        @Comment({"The max range of permissions to check for, e.g. plots.plot.127",
+            "The value covers the permission range to check, you need to assign the permission to players/groups still",
             "Modifying the value does NOT change the amount of plots players can claim"})
         public static int MAX_PLOTS = 127;
     }
@@ -475,6 +509,8 @@ public class Settings extends Config {
         @Comment({"Add a delay to all teleport commands (in seconds)",
             "Assign `plots.teleport.delay.bypass` to bypass the cooldown"})
         public static int DELAY = 0;
+        @Comment("Teleport outside of the plot before clearing") public static boolean ON_CLEAR = false;
+        @Comment("Teleport outside of the plot before deleting") public static boolean ON_DELETE = false;
         @Comment("The visit command is ordered by world instead of globally") public static boolean
             PER_WORLD_VISIT = false;
     }
@@ -573,12 +609,14 @@ public class Settings extends Config {
             true;
         @Comment("Allow WorldEdit to be restricted to plots") public static boolean
             WORLDEDIT_RESTRICTIONS = true;
-        @Comment("Allow economy to be used to sell, claim or buy plots.") public static boolean ECONOMY = true;
+        @Comment("Allow economy to be used to sell, claim or buy plots.") public static boolean ECONOMY = false;
         @Comment("Expiry will clear old or simplistic plots") public static boolean PLOT_EXPIRY =
             false;
         @Comment("Processes chunks (trimming, or entity/tile limits) ") public static boolean
             CHUNK_PROCESSOR = false;
         @Comment("Kill mobs on roads (Chicken, Cow, etc.)") public static boolean KILL_ROAD_MOBS = false;
+        @Comment("Also kill any road mobs that are being ridden, or are leashed") public static boolean
+            KILL_OWNED_ROAD_MOBS = false;
         @Comment("Kill items on roads (Stick, Paper, etc.)") public static boolean KILL_ROAD_ITEMS = false;
         @Comment("Kill vehicles on roads (Boat, Minecart, etc.)") public static boolean KILL_ROAD_VEHICLES = false;
         @Comment("Notify a player of any missed plot comments upon plot entry") public static boolean

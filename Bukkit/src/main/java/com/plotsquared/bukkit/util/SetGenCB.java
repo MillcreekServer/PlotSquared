@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ import java.util.ArrayList;
 public class SetGenCB {
 
     public static void setGenerator(World world) throws Exception {
-        PlotSquared.platform().getSetupUtils().updateGenerators();
+        PlotSquared.platform().setupUtils().updateGenerators();
         PlotSquared.get().removePlotAreas(world.getName());
         ChunkGenerator gen = world.getGenerator();
         if (gen == null) {

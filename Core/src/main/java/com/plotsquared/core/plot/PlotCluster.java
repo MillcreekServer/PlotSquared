@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ public class PlotCluster {
     public void getHome(@Nonnull final Consumer<Location> result) {
         final BlockLoc home = this.settings.getPosition();
         Consumer<Location> locationConsumer = toReturn ->
-            PlotSquared.platform().getWorldUtil().getHighestBlock(this.area.getWorldName(), toReturn.getX(), toReturn.getZ(),
+            PlotSquared.platform().worldUtil().getHighestBlock(this.area.getWorldName(), toReturn.getX(), toReturn.getZ(),
                 highest -> {
                 if (highest == 0) {
                     highest = 63;

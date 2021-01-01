@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -140,7 +140,7 @@ public class BukkitPlayer extends PlotPlayer<Player> {
     private void callEvent(@Nonnull final Event event) {
         final RegisteredListener[] listeners = event.getHandlers().getRegisteredListeners();
         for (final RegisteredListener listener : listeners) {
-            if (listener.getPlugin().getName().equals(PlotSquared.platform().getPluginName())) {
+            if (listener.getPlugin().getName().equals(PlotSquared.platform().pluginName())) {
                 continue;
             }
             try {

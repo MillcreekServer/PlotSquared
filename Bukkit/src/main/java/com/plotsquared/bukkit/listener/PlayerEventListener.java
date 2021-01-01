@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -70,7 +70,6 @@ import com.plotsquared.core.plot.flag.implementations.VillagerInteractFlag;
 import com.plotsquared.core.plot.flag.types.BlockTypeWrapper;
 import com.plotsquared.core.plot.world.PlotAreaManager;
 import com.plotsquared.core.util.EventDispatcher;
-import com.plotsquared.core.util.MainUtil;
 import com.plotsquared.core.util.MathMan;
 import com.plotsquared.core.util.Permissions;
 import com.plotsquared.core.util.PremiumVerification;
@@ -83,7 +82,6 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BlockType;
 import io.papermc.lib.PaperLib;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.Template;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -94,6 +92,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
@@ -109,6 +108,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -324,7 +324,7 @@ public class PlayerEventListener extends PlotListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onConnect(PlayerJoinEvent event) {
         final Player player = event.getPlayer();
-        PlotSquared.platform().getPlayerManager().removePlayer(player.getUniqueId());
+        PlotSquared.platform().playerManager().removePlayer(player.getUniqueId());
         final PlotPlayer<Player> pp = BukkitUtil.adapt(player);
 
         Location location = pp.getLocation();
@@ -660,7 +660,7 @@ public class PlayerEventListener extends PlotListener implements Listener {
         recipients.clear();
         Set<PlotPlayer<?>> spies = new HashSet<>();
         Set<PlotPlayer<?>> plotRecipients = new HashSet<>();
-        for (final PlotPlayer<?> pp : PlotSquared.platform().getPlayerManager().getPlayers()) {
+        for (final PlotPlayer<?> pp : PlotSquared.platform().playerManager().getPlayers()) {
             if (pp.getAttribute("chatspy")) {
                 spies.add(pp);
             } else {
@@ -1114,6 +1114,34 @@ public class PlayerEventListener extends PlotListener implements Listener {
         if (!this.eventDispatcher.checkPlayerBlockEvent(pp, eventType, location, blocktype1, true)) {
             event.setCancelled(true);
             event.setUseInteractedBlock(Event.Result.DENY);
+        }
+    }
+
+    // Boats can sometimes be placed on interactable blocks such as levers,
+    // see PS-175. Armor stands, minecarts and end crystals (the other entities
+    // supported by this event) don't have this issue.
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onBoatPlace(EntityPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (player == null) {
+            return;
+        }
+        Entity placed = event.getEntity();
+        if (!(placed instanceof Boat)) {
+            return;
+        }
+        BukkitPlayer pp = BukkitUtil.adapt(event.getPlayer());
+        PlotArea area = pp.getPlotAreaAbs();
+        if (area == null) {
+            return;
+        }
+        PlayerBlockEventType eventType = PlayerBlockEventType.PLACE_VEHICLE;
+        Block block = event.getBlock();
+        BlockType blockType = BukkitAdapter.asBlockType(block.getType());
+        Location location = BukkitUtil.adapt(block.getLocation());
+        if (!PlotSquared.get().getEventDispatcher()
+            .checkPlayerBlockEvent(pp, eventType, location, blockType, true)) {
+            event.setCancelled(true);
         }
     }
 

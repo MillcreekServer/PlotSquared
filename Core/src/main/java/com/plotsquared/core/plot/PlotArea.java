@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -182,7 +182,7 @@ public abstract class PlotArea {
     @Nonnull protected abstract PlotManager createManager();
 
     public QueueCoordinator getQueue() {
-        return this.globalBlockQueue.getNewQueue(PlotSquared.platform().getWorldUtil().getWeWorld(worldName));
+        return this.globalBlockQueue.getNewQueue(PlotSquared.platform().worldUtil().getWeWorld(worldName));
     }
 
     /**
@@ -466,7 +466,6 @@ public abstract class PlotArea {
         options.put("event.spawn.custom", this.isSpawnCustom());
         options.put("event.spawn.breeding", this.isSpawnBreeding());
         options.put("world.border", this.hasWorldBorder());
-        options.put("limits.max-members", this.getMaxPlotMembers());
         options.put("home.default", "side");
         String position = config.getString("home.nonmembers",
             config.getBoolean("home.allow-nonmembers", false) ?
@@ -1230,10 +1229,6 @@ public abstract class PlotArea {
 
     @Nonnull public IndependentPlotGenerator getGenerator() {
         return this.generator;
-    }
-
-    public int getMaxPlotMembers() {
-        return this.maxPlotMembers;
     }
 
     public boolean isAutoMerge() {

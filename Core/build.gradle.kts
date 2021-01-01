@@ -12,7 +12,7 @@ dependencies {
     compileOnlyApi("org.yaml:snakeyaml:1.26") // Some platforms provide this
 
     // Adventure stuff
-    api("net.kyori:adventure-api:4.1.1")
+    api("net.kyori:adventure-api:4.3.0")
     api("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT")
 
     // Guice
@@ -45,6 +45,8 @@ dependencies {
     api("com.intellectualsites:Pipeline:1.4.0-SNAPSHOT") {
         exclude(group = "com.google.guava")
     }
+    api("com.intellectualsites.arkitektonika:Arkitektonika-Client:2.0-SNAPSHOT")
+    api("com.intellectualsites.paster:Paster:1.0.2-SNAPSHOT")
 }
 
 tasks.processResources {

@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 @CommandDeclaration(command = "setowner",
@@ -117,7 +116,7 @@ public class Owner extends SetCommand {
                 player.sendMessage(TranslatableCaption.of("owner.set_owner"));
                 return;
             }
-            final PlotPlayer<?> other = PlotSquared.platform().getPlayerManager().getPlayerIfExists(uuid);
+            final PlotPlayer<?> other = PlotSquared.platform().playerManager().getPlayerIfExists(uuid);
             if (plot.isOwner(uuid)) {
                 player.sendMessage(
                         TranslatableCaption.of("member.already_owner"),
@@ -176,18 +175,7 @@ public class Owner extends SetCommand {
             } catch (Exception ignored) {
             }
         } else {
-            PlotSquared.get().getImpromptuUUIDPipeline().getSingle(value, (uuid, throwable) -> {
-               if (throwable instanceof TimeoutException) {
-                   player.sendMessage(TranslatableCaption.of("players.fetching_players_timeout"));
-               } else if (throwable != null) {
-                   player.sendMessage(
-                           TranslatableCaption.of("errors.invalid_player"),
-                           Template.of("value", value)
-                   );
-               } else {
-                   uuidConsumer.accept(uuid);
-               }
-            });
+            PlotSquared.get().getImpromptuUUIDPipeline().getSingle(value, (uuid, throwable) -> uuidConsumer.accept(uuid));
         }
         return true;
     }

@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ public class WESubscriber {
         Actor actor = event.getActor();
         if (actor != null && actor.isPlayer()) {
             String name = actor.getName();
-            final PlotPlayer<?> plotPlayer = PlotSquared.platform().getPlayerManager().getPlayerIfExists(name);
+            final PlotPlayer<?> plotPlayer = PlotSquared.platform().playerManager().getPlayerIfExists(name);
             Set<CuboidRegion> mask;
             if (plotPlayer == null) {
                 Player player = (Player) actor;

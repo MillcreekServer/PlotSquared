@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -65,8 +65,8 @@ public class SinglePlotManager extends PlotManager {
     }
 
     @Override public boolean clearPlot(@Nonnull Plot plot, final Runnable whenDone, @Nullable PlotPlayer<?> actor, @Nullable QueueCoordinator queue) {
-        PlotSquared.platform().getSetupUtils().unload(plot.getWorldName(), false);
-        final File worldFolder = new File(PlotSquared.platform().getWorldContainer(), plot.getWorldName());
+        PlotSquared.platform().setupUtils().unload(plot.getWorldName(), false);
+        final File worldFolder = new File(PlotSquared.platform().worldContainer(), plot.getWorldName());
         TaskManager.getPlatformImplementation().taskAsync(() -> {
             FileUtils.deleteDirectory(worldFolder);
             if (whenDone != null) {

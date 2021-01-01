@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -28,31 +28,43 @@ package com.plotsquared.core.util.placeholders;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.inject.Singleton;
+import com.plotsquared.core.PlotSquared;
+import com.plotsquared.core.configuration.Settings;
+import com.plotsquared.core.configuration.caption.LocaleHolder;
+import com.plotsquared.core.configuration.caption.TranslatableCaption;
 import com.plotsquared.core.player.PlotPlayer;
 import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.flag.GlobalFlagContainer;
 import com.plotsquared.core.plot.flag.PlotFlag;
 import com.plotsquared.core.util.EventDispatcher;
 import com.plotsquared.core.util.PlayerManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
 /**
  * Registry that contains {@link Placeholder placeholders}
  */
+@Singleton
 public final class PlaceholderRegistry {
 
     private final Map<String, Placeholder> placeholders;
     private final EventDispatcher eventDispatcher;
+    private final long timestamp = 0;
 
-    public PlaceholderRegistry(@Nonnull final EventDispatcher eventDispatcher) {
+    @Inject public PlaceholderRegistry(@Nonnull final EventDispatcher eventDispatcher) {
         this.placeholders = Maps.newHashMap();
         this.eventDispatcher = eventDispatcher;
         this.registerDefault();
@@ -68,48 +80,88 @@ public final class PlaceholderRegistry {
             this.registerPlaceholder(new PlotFlagPlaceholder(flag, true));
             this.registerPlaceholder(new PlotFlagPlaceholder(flag, false));
         });
-        this.createPlaceholder("currentplot_world", player -> player.getLocation().getWorldName());
+        this.createPlaceholder("world_name", player -> player.getLocation().getWorldName());
         this.createPlaceholder("has_plot", player -> player.getPlotCount() > 0 ? "true" : "false");
-        this.createPlaceholder("allowed_plot_count", player -> Integer.toString(player.getAllowedPlots()));
+        this.createPlaceholder("allowed_plot_count", (player) -> {
+            if (player.getAllowedPlots() >= Integer.MAX_VALUE) { // Beautifies cases with '*' permission
+                return legacyComponent(TranslatableCaption.of("info.infinite"), player);
+            }
+            return Integer.toString(player.getAllowedPlots());
+        });
         this.createPlaceholder("plot_count", player -> Integer.toString(player.getPlotCount()));
-        this.createPlaceholder("currentplot_alias", (player, plot) -> plot.getAlias());
+        this.createPlaceholder("currentplot_alias", (player, plot) -> {
+            if (plot.getAlias().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
+            }
+            return plot.getAlias();
+        });
         this.createPlaceholder("currentplot_owner", (player, plot) -> {
             final UUID plotOwner = plot.getOwnerAbs();
             if (plotOwner == null) {
-                return "";
+                return legacyComponent(TranslatableCaption.of("generic.generic_unowned"), player);
             }
 
             try {
                 return PlayerManager.getName(plotOwner, false);
-            } catch (final Exception ignored) {}
-
-            return "unknown";
+            } catch (final Exception ignored) {
+            }
+            return legacyComponent(TranslatableCaption.of("info.unknown"), player);
         });
         this.createPlaceholder("currentplot_members", (player, plot) -> {
-            if (plot.getMembers() == null && plot.getTrusted() == null) {
-                return "0";
+            if (plot.getMembers().isEmpty() && plot.getTrusted().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
             }
             return String.valueOf(plot.getMembers().size() + plot.getTrusted().size());
         });
         this.createPlaceholder("currentplot_members_added", (player, plot) -> {
-            if (plot.getMembers() == null) {
-                return "0";
+            if (plot.getMembers() .isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
             }
             return String.valueOf(plot.getMembers().size());
         });
         this.createPlaceholder("currentplot_members_trusted", (player, plot) -> {
-            if (plot.getTrusted() == null) {
-                return "0";
+            if (plot.getTrusted().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
             }
             return String.valueOf(plot.getTrusted().size());
         });
         this.createPlaceholder("currentplot_members_denied", (player, plot) -> {
-            if (plot.getDenied() == null) {
-                return "0";
+            if (plot.getDenied().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
             }
             return String.valueOf(plot.getDenied().size());
         });
-        this.createPlaceholder("has_build_rights", (player, plot) ->
+        this.createPlaceholder("currentplot_members_trusted_list", (player, plot) -> {
+            if (plot.getTrusted().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
+            }
+            return PlotSquared.platform().toLegacyPlatformString(
+                    PlayerManager.getPlayerList(plot.getTrusted(), player));
+        });
+        this.createPlaceholder("currentplot_members_added_list", (player, plot) -> {
+            if (plot.getMembers().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
+            }
+            return PlotSquared.platform().toLegacyPlatformString(
+                    PlayerManager.getPlayerList(plot.getMembers(), player));
+        });
+        this.createPlaceholder("currentplot_members_denied_list", (player, plot) -> {
+            if (plot.getDenied().isEmpty()) {
+                return legacyComponent(TranslatableCaption.of("info.none"), player);
+            }
+            return PlotSquared.platform().toLegacyPlatformString(
+                    PlayerManager.getPlayerList(plot.getDenied(), player));
+        });
+        this.createPlaceholder("currentplot_creationdate", (player, plot) -> {
+            if (plot.getTimestamp() == 0) {
+                return legacyComponent(TranslatableCaption.of("info.unknown"), player);
+            }
+            long creationDate = plot.getTimestamp();
+            SimpleDateFormat sdf = new SimpleDateFormat(Settings.Timeformat.DATE_FORMAT);
+            sdf.setTimeZone(TimeZone.getTimeZone(Settings.Timeformat.TIME_ZONE));
+            return sdf.format(creationDate);
+        });
+        this.createPlaceholder("currentplot_can_build", (player, plot) ->
             plot.isAdded(player.getUUID()) ? "true" : "false");
         this.createPlaceholder("currentplot_x", (player, plot) -> Integer.toString(plot.getId().getX()));
         this.createPlaceholder("currentplot_y", (player, plot) -> Integer.toString(plot.getId().getY()));
@@ -211,6 +263,18 @@ public final class PlaceholderRegistry {
      */
     @Nonnull public Collection<Placeholder> getPlaceholders() {
         return Collections.unmodifiableCollection(this.placeholders.values());
+    }
+
+    /**
+     * Converts a {@link Component} into a legacy-formatted string.
+     *
+     * @param caption      the caption key.
+     * @param localeHolder the locale holder to get the component for
+     * @return a legacy-formatted string.
+     */
+    private static String legacyComponent(TranslatableCaption caption, LocaleHolder localeHolder) {
+        Component component = MiniMessage.get().parse(caption.getComponent(localeHolder));
+        return PlotSquared.platform().toLegacyPlatformString(component);
     }
 
 

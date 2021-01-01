@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public class ClassicPlotManager extends SquarePlotManager {
         super(classicPlotWorld, regionManager);
         this.classicPlotWorld = classicPlotWorld;
         this.regionManager = regionManager;
-        this.subscriberFactory = PlotSquared.platform().getInjector().getInstance(ProgressSubscriberFactory.class);
+        this.subscriberFactory = PlotSquared.platform().injector().getInstance(ProgressSubscriberFactory.class);
     }
 
     @Override public boolean setComponent(@Nonnull PlotId plotId,

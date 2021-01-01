@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -28,10 +28,9 @@ package com.plotsquared.bukkit.listener;
 import com.google.inject.Inject;
 import com.plotsquared.bukkit.BukkitPlatform;
 import com.plotsquared.bukkit.placeholder.MVdWPlaceholders;
-import com.plotsquared.core.PlotSquared;
+import com.plotsquared.core.configuration.Settings;
 import com.plotsquared.core.configuration.caption.TranslatableCaption;
 import com.plotsquared.core.player.ConsolePlayer;
-import com.plotsquared.core.configuration.Settings;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -49,7 +48,7 @@ public class ServerListener implements Listener {
 
     @EventHandler public void onServerLoad(ServerLoadEvent event) {
         if (Bukkit.getPluginManager().getPlugin("MVdWPlaceholderAPI") != null && Settings.Enabled_Components.USE_MVDWAPI) {
-            new MVdWPlaceholders(this.plugin, PlotSquared.get().getPlaceholderRegistry());
+            new MVdWPlaceholders(this.plugin, this.plugin.placeholderRegistry());
             ConsolePlayer.getConsole().sendMessage(TranslatableCaption.of("placeholder.hooked"));
         }
     }

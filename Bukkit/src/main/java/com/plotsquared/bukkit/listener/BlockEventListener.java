@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import com.plotsquared.core.plot.flag.implementations.IceFormFlag;
 import com.plotsquared.core.plot.flag.implementations.IceMeltFlag;
 import com.plotsquared.core.plot.flag.implementations.InstabreakFlag;
 import com.plotsquared.core.plot.flag.implementations.KelpGrowFlag;
+import com.plotsquared.core.plot.flag.implementations.LeafDecayFlag;
 import com.plotsquared.core.plot.flag.implementations.LiquidFlowFlag;
 import com.plotsquared.core.plot.flag.implementations.MycelGrowFlag;
 import com.plotsquared.core.plot.flag.implementations.PlaceFlag;
@@ -57,8 +58,8 @@ import com.plotsquared.core.plot.flag.implementations.SnowMeltFlag;
 import com.plotsquared.core.plot.flag.implementations.SoilDryFlag;
 import com.plotsquared.core.plot.flag.implementations.VineGrowFlag;
 import com.plotsquared.core.plot.flag.types.BlockTypeWrapper;
+import com.plotsquared.core.plot.flag.types.BooleanFlag;
 import com.plotsquared.core.plot.world.PlotAreaManager;
-import com.plotsquared.core.util.MainUtil;
 import com.plotsquared.core.util.Permissions;
 import com.plotsquared.core.util.task.TaskManager;
 import com.plotsquared.core.util.task.TaskTime;
@@ -96,6 +97,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.material.Directional;
 import org.bukkit.projectiles.BlockProjectileSource;
@@ -126,7 +128,7 @@ public class BlockEventListener implements Listener {
             int z = bloc.getBlockZ();
             int distance = Bukkit.getViewDistance() * 16;
 
-            for (final PlotPlayer<?> player : PlotSquared.platform().getPlayerManager().getPlayers()) {
+            for (final PlotPlayer<?> player : PlotSquared.platform().playerManager().getPlayers()) {
                 Location location = player.getLocation();
                 if (location.getWorldName().equals(world)) {
                     if (16 * Math.abs(location.getX() - x) / 16 > distance || 16 * Math.abs(location.getZ() - z) / 16 > distance) {
@@ -163,18 +165,18 @@ public class BlockEventListener implements Listener {
                 if (plot.isMerged()) {
                     disable = true;
                     for (UUID owner : plot.getOwners()) {
-                        if (PlotSquared.platform().getPlayerManager().getPlayerIfExists(owner) != null) {
+                        if (PlotSquared.platform().playerManager().getPlayerIfExists(owner) != null) {
                             disable = false;
                             break;
                         }
                     }
                 } else {
-                    disable = PlotSquared.platform().getPlayerManager().getPlayerIfExists(plot.getOwnerAbs()) == null;
+                    disable = PlotSquared.platform().playerManager().getPlayerIfExists(plot.getOwnerAbs()) == null;
                 }
             }
             if (disable) {
                 for (UUID trusted : plot.getTrusted()) {
-                    if (PlotSquared.platform().getPlayerManager().getPlayerIfExists(trusted) != null) {
+                    if (PlotSquared.platform().playerManager().getPlayerIfExists(trusted) != null) {
                         disable = false;
                         break;
                     }
@@ -187,7 +189,7 @@ public class BlockEventListener implements Listener {
             }
         }
         if (Settings.Redstone.DISABLE_UNOCCUPIED) {
-            for (final PlotPlayer<?> player : PlotSquared.platform().getPlayerManager().getPlayers()) {
+            for (final PlotPlayer<?> player : PlotSquared.platform().playerManager().getPlayers()) {
                 if (plot.equals(player.getCurrentPlot())) {
                     return;
                 }
@@ -196,18 +198,26 @@ public class BlockEventListener implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST) public void onPhysicsEvent(BlockPhysicsEvent event) {
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onPhysicsEvent(BlockPhysicsEvent event) {
+        Block block = event.getBlock();
+        Location location = BukkitUtil.adapt(block.getLocation());
+        PlotArea area = location.getPlotArea();
+        if (area == null) {
+            return;
+        }
+        Plot plot = area.getOwnedPlotAbs(location);
+        if (plot == null) {
+            return;
+        }
+        if (event.getChangedType().hasGravity() && plot.getFlag(DisablePhysicsFlag.class)) {
+            event.setCancelled(true);
+            sendBlockChange(event.getBlock().getLocation(), event.getBlock().getBlockData());
+            plot.debug("Prevented block physics and resent block change because disable-physics = true");
+            return;
+        }
         switch (event.getChangedType()) {
             case COMPARATOR: {
-                Block block = event.getBlock();
-                Location location = BukkitUtil.adapt(block.getLocation());
-                if (location.isPlotArea()) {
-                    return;
-                }
-                Plot plot = location.getOwnedPlotAbs();
-                if (plot == null) {
-                    return;
-                }
                 if (!plot.getFlag(RedstoneFlag.class)) {
                     event.setCancelled(true);
                     plot.debug("Prevented comparator update because redstone = false");
@@ -221,16 +231,6 @@ public class BlockEventListener implements Listener {
             case TURTLE_EGG:
             case TURTLE_HELMET:
             case TURTLE_SPAWN_EGG: {
-                Block block = event.getBlock();
-                Location location = BukkitUtil.adapt(block.getLocation());
-                PlotArea area = location.getPlotArea();
-                if (area == null) {
-                    return;
-                }
-                Plot plot = area.getOwnedPlotAbs(location);
-                if (plot == null) {
-                    return;
-                }
                 if (plot.getFlag(DisablePhysicsFlag.class)) {
                     event.setCancelled(true);
                     plot.debug("Prevented block physics because disable-physics = true");
@@ -239,20 +239,10 @@ public class BlockEventListener implements Listener {
             }
             default:
                 if (Settings.Redstone.DETECT_INVALID_EDGE_PISTONS) {
-                    Block block = event.getBlock();
                     switch (block.getType()) {
                         case PISTON:
                         case STICKY_PISTON:
                             org.bukkit.block.data.Directional piston = (org.bukkit.block.data.Directional) block.getBlockData();
-                            Location location = BukkitUtil.adapt(block.getLocation());
-                            PlotArea area = location.getPlotArea();
-                            if (area == null) {
-                                return;
-                            }
-                            Plot plot = area.getOwnedPlotAbs(location);
-                            if (plot == null) {
-                                return;
-                            }
                             switch (piston.getFacing()) {
                                 case EAST:
                                     location = location.add(1, 0, 0);
@@ -482,7 +472,9 @@ public class BlockEventListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true) public void onBlockForm(BlockFormEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockForm(BlockFormEvent event) {
+        if (event instanceof EntityBlockFormEvent) return; // handled below
         Block block = event.getBlock();
         Location location = BukkitUtil.adapt(block.getLocation());
         if (location.isPlotRoad()) {
@@ -515,7 +507,8 @@ public class BlockEventListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true) public void onEntityBlockForm(EntityBlockFormEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityBlockForm(EntityBlockFormEvent event) {
         String world = event.getBlock().getWorld().getName();
         if (!this.plotAreaManager.hasPlotArea(world)) {
             return;
@@ -530,32 +523,44 @@ public class BlockEventListener implements Listener {
             event.setCancelled(true);
             return;
         }
+        Class<? extends BooleanFlag<?>> flag;
+        switch (event.getNewState().getType()) {
+            case SNOW:
+            case SNOW_BLOCK:
+                flag = SnowFormFlag.class;
+                break;
+            case ICE:
+            case FROSTED_ICE:
+            case PACKED_ICE:
+                flag = IceFormFlag.class;
+                break;
+            default:
+                return; // other blocks are ignored by this event
+        }
+        boolean allowed = plot.getFlag(flag);
         Entity entity = event.getEntity();
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            if (!plot.hasOwner()) {
-                BukkitPlayer plotPlayer = BukkitUtil.adapt(player);
-                if (plot.getFlag(IceFormFlag.class)) {
-                    plot.debug("Ice could not be formed because ice-form = false");
-                    return;
-                }
-                event.setCancelled(true);
-                return;
-            }
             BukkitPlayer plotPlayer = BukkitUtil.adapt(player);
             if (!plot.isAdded(plotPlayer.getUUID())) {
-                if (plot.getFlag(IceFormFlag.class)) {
-                    plot.debug("Ice could not be formed because ice-form = false");
-                    return;
+                if (allowed) {
+                    return; // player is not added but forming <flag> is allowed
                 }
-                event.setCancelled(true);
+                plot.debug(String.format("%s could not be formed because %s = false (entity is player)",
+                        event.getNewState().getType(),
+                        flag == SnowFormFlag.class ? "snow-form" : "ice-form"));
+                event.setCancelled(true); // player is not added and forming <flag> isn't allowed
+            }
+            return; // event is cancelled if not added and not allowed, otherwise forming <flag> is allowed
+        }
+        if (plot.hasOwner()) {
+            if (allowed) {
                 return;
             }
-            return;
-        }
-        if (!plot.getFlag(IceFormFlag.class)) {
+            plot.debug(String.format("%s could not be formed because %s = false (entity is not player)",
+                    event.getNewState().getType(),
+                    flag == SnowFormFlag.class ? "snow-form" : "ice-form"));
             event.setCancelled(true);
-            plot.debug("Ice could not form because ice-form = false");
         }
     }
 
@@ -1078,5 +1083,24 @@ public class BlockEventListener implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true) public void onLeavesDecay(LeavesDecayEvent event) {
+        Block block = event.getBlock();
+        Location location = BukkitUtil.adapt(block.getLocation());
+
+        PlotArea area = location.getPlotArea();
+        if (area == null) {
+            return;
+        }
+
+        Plot plot = location.getOwnedPlot();
+        if (plot == null || !plot.getFlag(LeafDecayFlag.class)) {
+            if (plot != null) {
+                plot.debug("Leaf decaying was cancelled because leaf-decay = false");
+            }
+            event.setCancelled(true);
+        }
+
     }
 }

@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -167,7 +167,7 @@ public class Auto extends SubCommand {
     @Override public boolean onCommand(final PlotPlayer<?> player, String[] args) {
         PlotArea plotarea = player.getApplicablePlotArea();
         if (plotarea == null) {
-            final PermissionHandler permissionHandler = PlotSquared.platform().getPermissionHandler();
+            final PermissionHandler permissionHandler = PlotSquared.platform().permissionHandler();
             if (permissionHandler.hasCapability(
                 PermissionHandler.PermissionHandlerCapability.PER_WORLD_PERMISSIONS)) {
                 for (final PlotArea area : this.plotAreaManager.getAllPlotAreas()) {

@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public class SnowFormFlag extends BooleanFlag<SnowFormFlag> {
     public static final SnowFormFlag SNOW_FORM_FALSE = new SnowFormFlag(false);
 
     private SnowFormFlag(boolean value) {
-        super(value, TranslatableCaption.of("flags.flag_description_snow_for"));
+        super(value, TranslatableCaption.of("flags.flag_description_snow_form"));
     }
 
     @Override protected SnowFormFlag flagOf(@Nonnull Boolean value) {

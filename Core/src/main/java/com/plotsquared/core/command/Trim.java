@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ public class Trim extends SubCommand {
         if (ExpireManager.IMP != null) {
             plots.removeAll(ExpireManager.IMP.getPendingExpired());
         }
-        result.value1 = new HashSet<>(PlotSquared.platform().getWorldUtil().getChunkChunks(world));
+        result.value1 = new HashSet<>(PlotSquared.platform().worldUtil().getChunkChunks(world));
         result.value2 = new HashSet<>();
         StaticCaption.of(" - MCA #: " + result.value1.size());
         StaticCaption.of(" - CHUNKS: " + (result.value1.size() * 1024) + " (max)");

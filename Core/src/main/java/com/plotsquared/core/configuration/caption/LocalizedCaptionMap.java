@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -42,7 +42,11 @@ public class LocalizedCaptionMap implements CaptionMap {
     }
 
     @Override @Nonnull public String getMessage(@Nonnull final TranslatableCaption caption) {
-        return this.captions.get(caption);
+        String message = this.captions.get(caption);
+        if (message == null) {
+            throw new NoSuchCaptionException(caption);
+        }
+        return message;
     }
 
     @Override @Nonnull public String getMessage(@Nonnull final TranslatableCaption caption,

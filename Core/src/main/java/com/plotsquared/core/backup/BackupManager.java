@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public interface BackupManager {
      * @param whenDone Action that runs when the automatic backup has been completed
      */
     static void backup(@Nullable PlotPlayer player, @Nonnull final Plot plot, @Nonnull Runnable whenDone) {
-        Objects.requireNonNull(PlotSquared.platform()).getBackupManager().automaticBackup(player, plot, whenDone);
+        Objects.requireNonNull(PlotSquared.platform()).backupManager().automaticBackup(player, plot, whenDone);
     }
 
     /**

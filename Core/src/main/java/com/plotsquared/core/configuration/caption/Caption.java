@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.plotsquared.core.configuration.caption;
-
-import com.plotsquared.core.configuration.caption.LocaleHolder;
 
 import javax.annotation.Nonnull;
 

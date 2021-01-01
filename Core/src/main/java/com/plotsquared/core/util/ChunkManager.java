@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ public abstract class ChunkManager {
                                           RunnableVal<ScopedQueueCoordinator> add,
                                           String world,
                                           BlockVector2 loc) {
-        QueueCoordinator queue = PlotSquared.platform().getGlobalBlockQueue().getNewQueue(PlotSquared.platform().getWorldUtil().getWeWorld(world));
+        QueueCoordinator queue = PlotSquared.platform().globalBlockQueue().getNewQueue(PlotSquared.platform().worldUtil().getWeWorld(world));
         if (PlotSquared.get().getPlotAreaManager().isAugmented(world) && PlotSquared.get().isNonStandardGeneration(world, loc)) {
             int blockX = loc.getX() << 4;
             int blockZ = loc.getZ() << 4;

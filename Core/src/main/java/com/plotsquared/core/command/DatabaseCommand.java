@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -162,11 +162,11 @@ public class DatabaseCommand extends SubCommand {
                                             PlotId newId = newPlot.getId();
                                             PlotId id = plot.getId();
                                             File worldFile =
-                                                new File(PlotSquared.platform().getWorldContainer(),
+                                                new File(PlotSquared.platform().worldContainer(),
                                                     id.toCommaSeparatedString());
                                             if (worldFile.exists()) {
                                                 File newFile =
-                                                    new File(PlotSquared.platform().getWorldContainer(),
+                                                    new File(PlotSquared.platform().worldContainer(),
                                                         newId.toCommaSeparatedString());
                                                 worldFile.renameTo(newFile);
                                             }

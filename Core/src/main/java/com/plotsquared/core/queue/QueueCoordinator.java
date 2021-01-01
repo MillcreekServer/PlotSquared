@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public abstract class QueueCoordinator {
      * @param world world as all queues should have this constructor
      */
     public QueueCoordinator(@Nullable World world) {
-        PlotSquared.platform().getInjector().injectMembers(this);
+        PlotSquared.platform().injector().injectMembers(this);
     }
 
     /**

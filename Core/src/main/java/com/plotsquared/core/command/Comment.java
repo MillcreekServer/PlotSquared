@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ public class Comment extends SubCommand {
             return false;
         }
 
-        for (final PlotPlayer pp : PlotSquared.platform().getPlayerManager().getPlayers()) {
+        for (final PlotPlayer pp : PlotSquared.platform().playerManager().getPlayers()) {
             if (pp.getAttribute("chatspy")) {
                 pp.sendMessage(StaticCaption.of("/plot comment " + StringMan.join(args, " ")));
             }

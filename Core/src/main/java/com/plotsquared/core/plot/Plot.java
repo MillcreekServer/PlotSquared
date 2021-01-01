@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,6 +97,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -242,7 +244,7 @@ public class Plot {
         this.owner = owner;
         this.temp = temp;
         this.flagContainer.setParentContainer(area.getFlagContainer());
-        PlotSquared.platform().getInjector().injectMembers(this);
+        PlotSquared.platform().injector().injectMembers(this);
     }
 
     /**
@@ -294,7 +296,7 @@ public class Plot {
                 }
             }
         }
-        PlotSquared.platform().getInjector().injectMembers(this);
+        PlotSquared.platform().injector().injectMembers(this);
     }
 
     /**
@@ -515,7 +517,7 @@ public class Plot {
      */
     @Nonnull public List<PlotPlayer<?>> getPlayersInPlot() {
         final List<PlotPlayer<?>> players = new ArrayList<>();
-        for (final PlotPlayer<?> player : PlotSquared.platform().getPlayerManager().getPlayers()) {
+        for (final PlotPlayer<?> player : PlotSquared.platform().playerManager().getPlayers()) {
             if (this.equals(player.getCurrentPlot())) {
                 players.add(player);
             }
@@ -1263,7 +1265,7 @@ public class Plot {
 
             if (Settings.Backup.DELETE_ON_UNCLAIM) {
                 // Destroy all backups when the plot is unclaimed
-                Objects.requireNonNull(PlotSquared.platform()).getBackupManager().getProfile(current).destroy();
+                Objects.requireNonNull(PlotSquared.platform()).backupManager().getProfile(current).destroy();
             }
 
             getArea().removePlot(getId());
@@ -1513,7 +1515,7 @@ public class Plot {
     /**
      * Gets the average rating of the plot. This is the value displayed in /plot info
      *
-     * @return average rating as double
+     * @return average rating as double, {@link Double#NaN} of no ratings exist
      */
     public double getAverageRating() {
         Collection<Rating> ratings = this.getRatings().values();
@@ -2299,12 +2301,13 @@ public class Plot {
                 continue;
             }
             boolean merge = true;
-            PlotId bot = PlotId.of(current.getId().getX(), current.getId().getY());
-            PlotId top = PlotId.of(current.getId().getX(), current.getId().getY());
+            PlotId bot = current.getId();
+            PlotId top = current.getId();
             while (merge) {
                 merge = false;
-                List<PlotId> ids = Lists.newArrayList((Iterable<? extends PlotId>) PlotId.PlotRangeIterator
-                    .range(PlotId.of(bot.getX(), bot.getY() - 1), PlotId.of(top.getX(), bot.getY() - 1)));
+                Iterable<PlotId> ids = PlotId.PlotRangeIterator.range(
+                        PlotId.of(bot.getX(), bot.getY() - 1),
+                        PlotId.of(top.getX(), bot.getY() - 1));
                 boolean tmp = true;
                 for (PlotId id : ids) {
                     Plot plot = this.area.getPlotAbs(id);
@@ -2316,8 +2319,9 @@ public class Plot {
                     merge = true;
                     bot = PlotId.of(bot.getX(), bot.getY() - 1);
                 }
-                ids = Lists.newArrayList((Iterable<? extends PlotId>) PlotId.PlotRangeIterator
-                    .range(PlotId.of(top.getX() + 1, bot.getY()), PlotId.of(top.getX() + 1, top.getY())));
+                ids = PlotId.PlotRangeIterator.range(
+                        PlotId.of(top.getX() + 1, bot.getY()),
+                        PlotId.of(top.getX() + 1, top.getY()));
                 tmp = true;
                 for (PlotId id : ids) {
                     Plot plot = this.area.getPlotAbs(id);
@@ -2329,8 +2333,9 @@ public class Plot {
                     merge = true;
                     top = PlotId.of(top.getX() + 1, top.getY());
                 }
-                ids = Lists.newArrayList((Iterable<? extends PlotId>) PlotId.PlotRangeIterator
-                    .range(PlotId.of(bot.getX(), top.getY() + 1), PlotId.of(top.getX(), top.getY() + 1)));
+                ids = PlotId.PlotRangeIterator.range(
+                        PlotId.of(bot.getX(), top.getY() + 1),
+                        PlotId.of(top.getX(), top.getY() + 1));
                 tmp = true;
                 for (PlotId id : ids) {
                     Plot plot = this.area.getPlotAbs(id);
@@ -2342,8 +2347,9 @@ public class Plot {
                     merge = true;
                     top = PlotId.of(top.getX(), top.getY() + 1);
                 }
-                ids = Lists.newArrayList((Iterable<? extends PlotId>) PlotId.PlotRangeIterator
-                    .range(PlotId.of(bot.getX() - 1, bot.getY()), PlotId.of(bot.getX() - 1, top.getY())));
+                ids = PlotId.PlotRangeIterator.range(
+                        PlotId.of(bot.getX() - 1, bot.getY()),
+                        PlotId.of(bot.getX() - 1, top.getY()));
                 tmp = true;
                 for (PlotId id : ids) {
                     Plot plot = this.area.getPlotAbs(id);
@@ -2524,11 +2530,11 @@ public class Plot {
             return false;
         }
         if (!isMerged()) {
-            return PlotSquared.platform().getPlayerManager().getPlayerIfExists(Objects.requireNonNull(this.getOwnerAbs())) != null;
+            return PlotSquared.platform().playerManager().getPlayerIfExists(Objects.requireNonNull(this.getOwnerAbs())) != null;
         }
         for (final Plot current : getConnectedPlots()) {
             if (current.hasOwner()
-                && PlotSquared.platform().getPlayerManager().getPlayerIfExists(Objects.requireNonNull(current.getOwnerAbs())) != null) {
+                && PlotSquared.platform().playerManager().getPlayerIfExists(Objects.requireNonNull(current.getOwnerAbs())) != null) {
                 return true;
             }
         }
@@ -2663,10 +2669,10 @@ public class Plot {
         int num = this.getConnectedPlots().size();
         String alias = !this.getAlias().isEmpty() ? this.getAlias() : TranslatableCaption.of("info.none").getComponent(player);
         Location bot = this.getCorners()[0];
-        PlotSquared.platform().getWorldUtil().getBiome(Objects.requireNonNull(this.getWorldName()), bot.getX(), bot.getZ(), biome -> {
-            Component trusted = PlayerManager.getPlayerList(this.getTrusted());
-            Component members = PlayerManager.getPlayerList(this.getMembers());
-            Component denied = PlayerManager.getPlayerList(this.getDenied());
+        PlotSquared.platform().worldUtil().getBiome(Objects.requireNonNull(this.getWorldName()), bot.getX(), bot.getZ(), biome -> {
+            Component trusted = PlayerManager.getPlayerList(this.getTrusted(), player);
+            Component members = PlayerManager.getPlayerList(this.getMembers(), player);
+            Component denied = PlayerManager.getPlayerList(this.getDenied(), player);
             String seen;
             if (Settings.Enabled_Components.PLOT_EXPIRY && ExpireManager.IMP != null) {
                 if (this.isOnline()) {
@@ -2688,11 +2694,12 @@ public class Plot {
                 description = TranslatableCaption.of("info.plot_no_description").getComponent(player);
             }
 
-            Component flags = null;
+            Component flags;
             Collection<PlotFlag<?, ?>> flagCollection = this.getApplicableFlags(true);
             if (flagCollection.isEmpty()) {
                 flags = MINI_MESSAGE.parse(TranslatableCaption.of("info.none").getComponent(player));
             } else {
+                TextComponent.Builder flagBuilder = Component.text();
                 String prefix = " ";
                 for (final PlotFlag<?, ?> flag : flagCollection) {
                     Object value;
@@ -2701,19 +2708,22 @@ public class Plot {
                     } else {
                         value = flag.toString();
                     }
-                    Component snip = MINI_MESSAGE
-                        .parse(prefix + CaptionUtility.format(player, TranslatableCaption.of("info.plot_flag_list").getComponent(player)),
+                    Component snip = MINI_MESSAGE.parse(prefix + CaptionUtility.format(player, TranslatableCaption.of("info.plot_flag_list").getComponent(player)),
                             Template.of("flag", flag.getName()), Template.of("value", CaptionUtility.formatRaw(player, value.toString())));
-                    if (flags != null) {
-                        flags.append(snip);
-                    } else {
-                        flags = snip;
-                    }
+                    flagBuilder.append(snip);
                     prefix = ", ";
                 }
+                flags = flagBuilder.build();
             }
             boolean build = this.isAdded(player.getUUID());
-            Component owner = this.getOwners().isEmpty() ? Component.text("unowned") : PlayerManager.getPlayerList(this.getOwners());
+            Component owner;
+            if (this.getOwner() == null) {
+                owner = Component.text("unowned");
+            } else if (this.getOwner().equals(DBFunc.SERVER)) {
+                owner = Component.text(MINI_MESSAGE.stripTokens(TranslatableCaption.of("info.server").getComponent(player)));
+            } else {
+                owner = PlayerManager.getPlayerList(this.getOwners(), player);
+            }
             Template headerTemplate = Template.of("header", TranslatableCaption.of("info.plot_info_header").getComponent(player));
             Template footerTemplate = Template.of("footer", TranslatableCaption.of("info.plot_info_footer").getComponent(player));
             Template areaTemplate;
@@ -2723,6 +2733,11 @@ public class Plot {
             } else {
                 areaTemplate = Template.of("area", TranslatableCaption.of("info.none").getComponent(player));
             }
+            long creationDate = Long.parseLong(String.valueOf(timestamp));
+            SimpleDateFormat sdf = new SimpleDateFormat(Settings.Timeformat.DATE_FORMAT);
+            sdf.setTimeZone(TimeZone.getTimeZone(Settings.Timeformat.TIME_ZONE));
+            String newDate = sdf.format(creationDate);
+
             Template idTemplate = Template.of("id", this.getId().toString());
             Template aliasTemplate = Template.of("alias", alias);
             Template numTemplate = Template.of("num", String.valueOf(num));
@@ -2736,6 +2751,7 @@ public class Plot {
             Template deniedTemplate = Template.of("denied", denied);
             Template seenTemplate = Template.of("seen", seen);
             Template flagsTemplate = Template.of("flags", flags);
+            Template creationTemplate = Template.of("creationdate", newDate);
             Template buildTemplate = Template.of("build", String.valueOf(build));
             if (iInfo.getComponent(player).contains("<rating>")) {
                 TaskManager.runTaskAsync(() -> {
@@ -2758,13 +2774,19 @@ public class Plot {
                             }
                             ratingTemplate = Template.of("rating", rating.toString());
                         } else {
-                            ratingTemplate = Template.of("rating", String.format("%.1f", this.getAverageRating()) + '/' + max);
+                            double rating = this.getAverageRating();
+                            if (Double.isFinite(rating)) {
+                                ratingTemplate = Template.of("rating", String.format("%.1f", rating) + '/' + max);
+                            } else {
+                                ratingTemplate = Template.of("rating",
+                                        TranslatableCaption.of("info.none").getComponent(player));
+                            }
                         }
                     }
                     future.complete(StaticCaption.of(MINI_MESSAGE.serialize(MINI_MESSAGE
                         .parse(iInfo.getComponent(player), headerTemplate, areaTemplate, idTemplate, aliasTemplate, numTemplate, descTemplate,
                             biomeTemplate, ownerTemplate, membersTemplate, playerTemplate, trustedTemplate, helpersTemplate, deniedTemplate,
-                            seenTemplate, flagsTemplate, buildTemplate, ratingTemplate, footerTemplate))));
+                            seenTemplate, flagsTemplate, buildTemplate, ratingTemplate, creationTemplate, footerTemplate))));
                 });
                 return;
             }

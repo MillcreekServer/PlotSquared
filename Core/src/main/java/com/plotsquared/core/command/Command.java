@@ -8,7 +8,7 @@
  *                                    | |
  *                                    |_|
  *            PlotSquared plot management system for Minecraft
- *                  Copyright (C) 2020 IntellectualSites
+ *                  Copyright (C) 2021 IntellectualSites
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -401,9 +401,9 @@ public abstract class Command {
 
     public int getMatch(String[] args, Command cmd, PlotPlayer<?> player) {
         String perm = cmd.getPermission();
-        HashSet<String> desc = new HashSet<>();
         int count = cmd.getAliases().stream().filter(alias -> alias.startsWith(args[0]))
             .mapToInt(alias -> 5).sum();
+        HashSet<String> desc = new HashSet<>();
         Collections.addAll(desc, cmd.getDescription().getComponent(player).split(" "));
         for (String arg : args) {
             if (perm.startsWith(arg)) {
